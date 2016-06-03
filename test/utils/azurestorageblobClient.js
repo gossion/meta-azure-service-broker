@@ -1,6 +1,7 @@
 var azure = require('azure-storage');
 var async = require('async');
 var logule = require('logule');
+var statusCode = require('./statusCode');
 
 var LOCALFILE = __filename;
 
@@ -12,7 +13,7 @@ module.exports = function() {
     context.accountName = accountName;
     context.accountKey = accountKey;
     context.containerName = containerName;
-    context.status = 'FAIL';
+    context.status = statusCode.FAIL;
     var destblob = clientName + Math.floor(Math.random()*1000);
     try {
       var blobService = azure.createBlobService(accountName, accountKey);
@@ -20,7 +21,7 @@ module.exports = function() {
       blobService.createBlockBlobFromLocalFile(containerName, destblob, LOCALFILE, function(error, result, response) {
         if (!error) {
           if(response.isSuccessful == true) {
-              context.status = 'PASS'
+              context.status = statusCode.PASS
           } 
           log.debug('Deleteing blob: '+ destblob);
           blobService.deleteBlob(containerName, destblob, function(error, response) {
@@ -52,10 +53,10 @@ module.exports = function() {
       }
     ],
     function(error, results) {
-      var result = 'PASS';
+      var result = statusCode.PASS;
       for(var i=0, len=results.length; i < len; i++) {
-        if(results[i].status != 'PASS') {
-          result = 'FAIL';
+        if(results[i].status != statusCode.PASS) {
+          result = statusCode.FAIL;
           log.error('FAIL result: ' + results[i])
         }
       }

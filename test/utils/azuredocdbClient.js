@@ -1,6 +1,7 @@
 var async = require('async');
 var logule = require('logule');
-var documentdb = require('documentdb')
+var documentdb = require('documentdb');
+var statusCode = require('./statusCode');
 
 module.exports = function() {
   var clientName = 'azuredocdbClient';
@@ -25,8 +26,8 @@ module.exports = function() {
               callback(err);
             } else {
               if (results.length === 0) {
-                log.error('Can found the database: ' + credential.documentdb_database);
-                callback('Can found database', -1);
+                log.error('Database NotFound: ' + credential.documentdb_database);
+                callback(new Error('Database NotFound'), statusCode.FAIL);
               } else {
                 log.debug('Found database: ' + results[0]);
                 callback(null, results[0])
@@ -49,22 +50,22 @@ module.exports = function() {
               log.error('Can not create document. Error: ' + err);
               callback(err);
             } else {
-              callback(null, 'PASS');
+              callback(null, statusCode.PASS);
             }
           });
         }
       ],
       function(err, result) {
-        if (err || result != 'PASS') {
-          next('FAIL');
+        if (err || result != statusCode.PASS) {
+          next(statusCode.FAIL);
         } else {
-          next('PASS');
+          next(statusCode.PASS);
         }
       });
 
     } catch (ex) {
       log.error('Got exception: ' + ex);
-      next('FAIL');
+      next(statusCode.FAIL);
     }
   }
 }

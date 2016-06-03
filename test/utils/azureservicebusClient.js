@@ -1,6 +1,7 @@
 var azure = require('azure');
 var async = require('async');
 var logule = require('logule');
+var statusCode = require('./statusCode');
 
 module.exports = function() {
   var clientName = 'azureservicebusClient';
@@ -17,7 +18,7 @@ module.exports = function() {
           serviceBusService.createQueueIfNotExists(queueName, function(error){
             if(!error){
               log.debug('Queue created or exists.');
-              callback(null, true);
+              callback(null, statusCode.PASS);
             } else {
               log.error('Queue ' + queueName + ' not created. Error: ' + error);
               callback(error)
@@ -28,7 +29,7 @@ module.exports = function() {
           serviceBusService.sendQueueMessage(queueName, message, function(error){
             if(!error){
               log.debug('message sent');
-              callback(null, true);
+              callback(null, statusCode.PASS);
             } else {
               log.error('Failed to send message, Error: ' + error);
               callback(error);
@@ -39,10 +40,10 @@ module.exports = function() {
           serviceBusService.receiveQueueMessage(queueName, function(error, receivedMessage){
             if(!error){
               if(receivedMessage.body == 'servicebus test message') {
-                callback(null, true);
+                callback(null, statusCode.PASS);
               } else {
                 log.error('Message does not match. Sent: ' + message + ' Received: ' + receivedMessage);
-                callback('recive message does not match the message sent', false)
+                callback(new Error('recive message does not match the message sent'), statusCode.FAIL)
               }
             } else {
               log.error('Failed to receive message. Error: ' + receivedMessage);
@@ -53,21 +54,21 @@ module.exports = function() {
       ],
       function(err, result) {
         if(err || !result) {
-          next('FAIL');
+          next(statusCode.FAIL);
         } else {
-          next('PASS')
+          next(statusCode.PASS)
         }
       });
     } catch (ex) {
       log.error('Got exception: ' + ex);
-      next('FAIL');
+      next(statusCode.FAIL);
     }   
   }
 
   this.validateCredential = function(credential, next) {
-    var sleeptTime = 1; //sleep 30 seconds(30000) will pass the test
+    var sleepTime = 1; //if sleep for 30 seconds(30000), the test will pass
     setTimeout(function(){
       validate(credential, next)
-    }, sleeptTime);
+    }, sleepTime);
   }
 }

@@ -1,6 +1,7 @@
 var redis = require('redis');
 var async = require('async');
 var logule = require('logule');
+var statusCode = require('./statusCode');
 
 module.exports = function() {
   var clientName = 'azurerediscacheClient';
@@ -18,21 +19,21 @@ module.exports = function() {
         function(callback) {
           client.set(key, value, function(err, reply) {
             if(!err) {
-              callback(null, true);
+              callback(null, statusCode.PASS);
             } else {
               log.error('Failed to set a data. Error: ' + err);
               callback(err);
             }
           });
         },
-        function(set, callback) {
+        function(result, callback) {
           client.get(key,  function(err, reply) {
             if(!err) {
               if(reply == value) {
-                callback(null, true);
+                callback(null, statusCode.PASS);
               } else {
                 log.error('Data not match. expect: ' + value + ' got: ' + reply);
-                callback('value not match', false);
+                callback(new Error('value not match'), statusCode.FAIL);
               }
             } else {
               log.error('Failed to get data. Error: ' + err);
@@ -42,16 +43,16 @@ module.exports = function() {
         }
       ],
       function(err, result) {
-        if(err || !result) {
-          next('FAIL');
+        if(err || result != statusCode.PASS) {
+          next(statusCode.FAIL);
         } else {
-          next('PASS')
+          next(statusCode.PASS)
         }
       }); 
   
     } catch(ex) {
       log.error('Got an exception: ' + ex);
-      next('FAIL');
+      next(statusCode.FAIL);
     }
   }
 }

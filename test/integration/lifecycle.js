@@ -11,6 +11,7 @@ var testMatrix = require('./test-matrix');
 var broker = require('../../brokerserver')
 var server = broker.restServer;
 var clients = require('../utils/clients');
+var statusCode = require('../utils/statusCode');
 
 var lifecycle = function(service) {
   var serviceName = service.serviceName;
@@ -127,7 +128,7 @@ var lifecycle = function(service) {
               client = clients[serviceName];
               if(client) {
                 client.validateCredential(actualCredentials, function(result) {
-                  result.should.equal('PASS');
+                  result.should.equal(statusCode.PASS);
                   done();
                 });
               } else {
